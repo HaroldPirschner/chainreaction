@@ -1,5 +1,6 @@
 package de.freewarepoint.cr.swing;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -14,10 +15,11 @@ import javax.swing.JPanel;
 
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
+import de.freewarepoint.cr.ai.ThreadLockManager;
 import de.freewarepoint.retrofont.RetroFont;
 
 /**
- *
+ * 
  * @author maik
  * @author jonny
  */
@@ -119,7 +121,8 @@ public class UISettings extends JPanel implements Runnable {
 	        exitButton.setPressedIcon(new ImageIcon(retroFont.getRetroString(str, Color.BLACK, Color.WHITE, 16)));
 	        exitButton.addActionListener(new ActionListener() {
 	            public void actionPerformed( ActionEvent e ) {
-	                game.dispatchEvent(new WindowEvent(game, WindowEvent.WINDOW_CLOSING));
+//	                AWTEvent event = new WindowEvent(game, WindowEvent.WINDOW_CLOSING);
+	            	game.dispose();//dispatchEvent(event);
 	            }
 	        });
 	        buttonPanel.add(exitButton);

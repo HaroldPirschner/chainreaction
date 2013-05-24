@@ -26,6 +26,8 @@ import de.freewarepoint.cr.Player;
 import de.freewarepoint.cr.Settings;
 import de.freewarepoint.cr.SettingsLoader;
 import de.freewarepoint.cr.ai.AI;
+import de.freewarepoint.cr.ai.JABCAI;
+import de.freewarepoint.cr.ai.NoneAI;
 
 /**
  * @author maik
@@ -51,11 +53,17 @@ public class UIGame extends JFrame {
 
 	private final Settings settings;
 
-	public UIGame() {
+	public UIGame(boolean hasTwoAIs) {
 		settings = SettingsLoader.loadSettings();
 		this.execService = Executors.newSingleThreadExecutor();
 		initGUI();
-		startNewGame();
+		
+		// choose a JABC AI!
+		chooseAI(Player.SECOND, new JABCAI());
+        if (hasTwoAIs) {
+        	chooseAI(Player.FIRST, new JABCAI());
+        }
+        	
 		final GraphicsDevice screenDevice = 
 				GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		if (screenDevice.isFullScreenSupported()) {
@@ -252,25 +260,18 @@ public class UIGame extends JFrame {
 	private void doAI() {
 		blockMoves = true;
 		while (game.getWinner() == Player.NONE && game.getPlayerStatus(game.getCurrentPlayer()).isAIPlayer()) {
+			/*
+			XXX commented out for quicker gameplay
 			try {
 				Thread.sleep(2000);
 			} 
 			catch (InterruptedException ex) {
 				Logger.getLogger(UIGame.class.getName()).log(Level.SEVERE, null, ex);
 			}
+			*/
 			game.getPlayerStatus(game.getCurrentPlayer()).getAI().doMove();
 			updateStatus();
 		}
 		blockMoves = false;
-	}
-
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				new UIGame();
-			}
-		});
 	}
 }

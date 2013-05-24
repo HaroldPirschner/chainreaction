@@ -19,6 +19,7 @@ import javax.swing.ScrollPaneConstants;
 import de.freewarepoint.cr.Player;
 import de.freewarepoint.cr.SettingsLoader;
 import de.freewarepoint.cr.ai.AI;
+import de.freewarepoint.cr.ai.JABCAI;
 import de.freewarepoint.cr.ai.NoneAI;
 import de.freewarepoint.cr.ai.StandardAI;
 import de.freewarepoint.retrofont.RetroFont;
@@ -69,6 +70,7 @@ public class UIChooseAI extends JPanel {
         final Vector<AI> ais = new Vector<>();
         ais.add(new NoneAI());
         ais.add(new StandardAI());
+        ais.add(new JABCAI());
         ais.addAll(SettingsLoader.loadAIs());
         
         aiList = new JList<>(ais);

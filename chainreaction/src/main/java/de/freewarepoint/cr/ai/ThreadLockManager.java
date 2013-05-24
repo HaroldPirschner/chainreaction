@@ -1,16 +1,15 @@
 package de.freewarepoint.cr.ai;
 
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ThreadLockManager {
-	static Lock lock = new ReentrantLock();
+	static ReentrantLock lock = new ReentrantLock();
 	static Condition jABCMayRun = lock.newCondition();
 	static Condition chainreactionMayRun = lock.newCondition();
 	
-	public static Lock getLock() {
+	public static ReentrantLock getLock() {
 		return lock;
 	}
 	

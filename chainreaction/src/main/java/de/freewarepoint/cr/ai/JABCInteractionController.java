@@ -2,62 +2,94 @@ package de.freewarepoint.cr.ai;
 
 import java.util.concurrent.locks.Condition;
 
-import de.freewarepoint.cr.swing.UIGame;
+import javax.swing.SwingUtilities;
 
+import de.freewarepoint.cr.swing.UIGame;
 
 public class JABCInteractionController {
 
 	// FIXME: what happens if the game is shut down while the lock is still locked?
-	
+
 	Thread chainreaction;
+	static JABCAI currentAI;
+	boolean hasTwoAIs = false;
 	
 	public JABCInteractionController() {
-		chainreaction = new Thread(new GameRunner());
 	}
-	
+
 	public void startGame() {
+		if (chainreaction != null) {
+			throw new IllegalStateException("The game has already been started!");
+		}
+		chainreaction = new Thread(new GameRunner());
+		chainreaction.setDaemon(true);
+		
 		// let the game run until it gets to a "breakpoint"
 		chainreaction.start();
-		
+
+		ThreadLockManager.getLock().lock();
 		waitForCallback();
 	}
 
 	public void wakeChainreaction() {
-		// XXX reihenfolge?
-		ThreadLockManager.getLock().unlock();
-		ThreadLockManager.getChainreactionRunCondition().signalAll();
-
+		ThreadLockManager.getLock().lock();
+		
+		try {
+			ThreadLockManager.getChainreactionRunCondition().signalAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		waitForCallback();
 	}
-	
+
 	/**
-	 * Wait for 10ms and awaits a {@link Condition} that the game must notify in order to express that it has reached a
+	 * Awaits a {@link Condition} that the game must notify in order to express that it has reached a
 	 * breakpoint.
 	 */
 	private void waitForCallback() {
-		// give the game enough time to lock the lock...
 		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) { e.printStackTrace(); }
-		
-		// ...after that wait until the lock is available again
-		try {
-			ThreadLockManager.getJABCRunCondition().await(); 
-		} catch (InterruptedException e) { e.printStackTrace(); }
-		
-		// when it is available, lock it and return
-		ThreadLockManager.getLock().lock();
+			ThreadLockManager.getJABCRunCondition().await();
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		ThreadLockManager.getLock().unlock();
 	}
 	
+	public static void setAI(JABCAI ai) {
+		currentAI = ai;
+	}
+	
+	public static JABCAI getAIInstance() {
+		return currentAI;
+	}
+	
+	public static int getRound() {
+		return currentAI.getRound();
+	}
+	
+	public void setTwoAIMode(boolean activated) {
+		if (chainreaction != null) {
+			throw new IllegalStateException("The game has already been started! This modification is not allowed.");
+		}
+		hasTwoAIs = activated;
+	}
+
 	/**
 	 * @author Dennis Kuehn
 	 */
 	private class GameRunner implements Runnable {
+		
 		@Override
 		public void run() {
-			ThreadLockManager.getLock().lock();
-			UIGame.main(null);
+			SwingUtilities.invokeLater(new Runnable() {
+
+				@Override
+				public void run() {
+					new UIGame(hasTwoAIs);
+				}
+			});
 		}
 	}
 }
-
