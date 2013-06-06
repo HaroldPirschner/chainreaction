@@ -4,7 +4,7 @@
 
 	<groupId>de.freewarepoint</groupId>
 	<artifactId>chainreaction</artifactId>
-	<version>6-SNAPSHOT</version>
+	<version>5.2</version>
     <packaging>jar</packaging>
 
 	<name>chainreaction</name>

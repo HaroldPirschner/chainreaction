@@ -87,7 +87,7 @@ public class JABCInteractionController {
 
 				@Override
 				public void run() {
-					new UIGame(hasTwoAIs);
+					UIGame.newInstance(hasTwoAIs);
 				}
 			});
 		}

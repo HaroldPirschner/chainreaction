@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import de.freewarepoint.cr.EvalField;
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
 import de.freewarepoint.cr.Settings;
@@ -50,10 +51,21 @@ public class UIGame extends JFrame {
 	private UIField uifield;
 	private UIChooseAI uichooseai1;
 	private UIChooseAI uichooseai2;
-
+	private static UIEvalFieldDisplay evalFieldDisplay;
+	
 	private final Settings settings;
+	private static UIGame instance = null;
 
-	public UIGame(boolean hasTwoAIs) {
+	/**
+	 * Retrieves a new instance of UIGame. Should any previous instance exist, it will be deleted.
+	 * @param hasTwoAIs 
+	 */
+	public static UIGame newInstance(boolean hasTwoAIs) {
+		instance = new UIGame(hasTwoAIs);
+		return instance;
+	}
+	
+	private UIGame(boolean hasTwoAIs) {
 		settings = SettingsLoader.loadSettings();
 		this.execService = Executors.newSingleThreadExecutor();
 		initGUI();
@@ -79,6 +91,16 @@ public class UIGame extends JFrame {
 		}
 	}
 
+	public static void displayEvalField(EvalField field) {
+		evalFieldDisplay = new UIEvalFieldDisplay(field);
+		instance.getContentPane().add(evalFieldDisplay);
+	}
+
+	public static void hideEvalField() {
+		instance.getContentPane().remove(evalFieldDisplay);
+		evalFieldDisplay = null;
+	}
+	
 	private void initGUI() {
 		setUndecorated(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

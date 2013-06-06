@@ -1,5 +1,6 @@
 package de.freewarepoint.cr;
 
+
 public class EvalField {
 
 	private final int width, height;
@@ -32,6 +33,10 @@ public class EvalField {
 	
 	public int getValueAt(int x, int y) {
 		return fieldEvalues[x][y];
+	}
+	
+	public int getValueAt(CellCoordinateTuple cellCoordinate) {
+		return fieldEvalues[cellCoordinate.x][cellCoordinate.y];
 	}
 	
 	public void setValueAt(int x, int y, int value) {
