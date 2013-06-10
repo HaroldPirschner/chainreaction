@@ -1,5 +1,7 @@
 package de.freewarepoint.cr.ai;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 
 import javax.swing.SwingUtilities;
@@ -10,22 +12,29 @@ public class JABCInteractionController {
 
 	// FIXME: what happens if the game is shut down while the lock is still locked?
 
-	Thread chainreaction;
+	Runnable chainreaction;
 	static JABCAI currentAI;
 	boolean hasTwoAIs = false;
+	private static ExecutorService executer = Executors.newCachedThreadPool();
+	public static Thread me;
 	
 	public JABCInteractionController() {
+	}
+
+	public static void shutdownChainreaction() {
+		System.out.println("Shutting down Chainreaction!");
+		me.interrupt();
+		executer.shutdownNow();
 	}
 
 	public void startGame() {
 		if (chainreaction != null) {
 			throw new IllegalStateException("The game has already been started!");
 		}
-		chainreaction = new Thread(new GameRunner());
-		chainreaction.setDaemon(true);
+		chainreaction = new GameRunner();
+		executer.execute(chainreaction);
 		
-		// let the game run until it gets to a "breakpoint"
-		chainreaction.start();
+		me = Thread.currentThread();
 
 		ThreadLockManager.getLock().lock();
 		waitForCallback();
@@ -52,7 +61,8 @@ public class JABCInteractionController {
 			ThreadLockManager.getJABCRunCondition().await();
 		}
 		catch (InterruptedException e) {
-			e.printStackTrace();
+			ThreadLockManager.getLock().unlock();
+			throw new ExecutionTerminatedException();
 		}
 		ThreadLockManager.getLock().unlock();
 	}
@@ -76,20 +86,23 @@ public class JABCInteractionController {
 		hasTwoAIs = activated;
 	}
 
-	/**
-	 * @author Dennis Kuehn
-	 */
+	
 	private class GameRunner implements Runnable {
 		
 		@Override
 		public void run() {
 			SwingUtilities.invokeLater(new Runnable() {
-
 				@Override
 				public void run() {
-					UIGame.newInstance(hasTwoAIs);
+					new UIGame(hasTwoAIs);
 				}
 			});
+		}
+	}
+	
+	private class ExecutionTerminatedException extends RuntimeException {
+		public String toString() {
+			return "Das Spiel wurde beendet.";
 		}
 	}
 }

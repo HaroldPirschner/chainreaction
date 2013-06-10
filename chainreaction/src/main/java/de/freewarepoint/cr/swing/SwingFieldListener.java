@@ -28,7 +28,7 @@ public class SwingFieldListener implements FieldListener {
 	}
 	
 	public void shutDown() {
-		execService.shutdownNow();
+		execService.shutdown();
 		listener = null;
 	}
 

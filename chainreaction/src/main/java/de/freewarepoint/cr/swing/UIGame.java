@@ -9,11 +9,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -21,14 +18,13 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import de.freewarepoint.cr.EvalField;
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
 import de.freewarepoint.cr.Settings;
 import de.freewarepoint.cr.SettingsLoader;
 import de.freewarepoint.cr.ai.AI;
 import de.freewarepoint.cr.ai.JABCAI;
-import de.freewarepoint.cr.ai.NoneAI;
+import de.freewarepoint.cr.ai.JABCInteractionController;
 
 /**
  * @author maik
@@ -37,7 +33,6 @@ import de.freewarepoint.cr.ai.NoneAI;
 public class UIGame extends JFrame {
 
 	private static final long serialVersionUID = -2178907135995785292L;
-
 	private UIStatus uistatus;
 	private UIPlayerStatus uiplayerstatus;
 	private final ExecutorService execService;
@@ -51,21 +46,11 @@ public class UIGame extends JFrame {
 	private UIField uifield;
 	private UIChooseAI uichooseai1;
 	private UIChooseAI uichooseai2;
-	private static UIEvalFieldDisplay evalFieldDisplay;
 	
 	private final Settings settings;
-	private static UIGame instance = null;
 
-	/**
-	 * Retrieves a new instance of UIGame. Should any previous instance exist, it will be deleted.
-	 * @param hasTwoAIs 
-	 */
-	public static UIGame newInstance(boolean hasTwoAIs) {
-		instance = new UIGame(hasTwoAIs);
-		return instance;
-	}
 	
-	private UIGame(boolean hasTwoAIs) {
+	public UIGame(boolean hasTwoAIs) {
 		settings = SettingsLoader.loadSettings();
 		this.execService = Executors.newSingleThreadExecutor();
 		initGUI();
@@ -89,16 +74,6 @@ public class UIGame extends JFrame {
 			this.setVisible(true);
 			this.setExtendedState(Frame.MAXIMIZED_BOTH);
 		}
-	}
-
-	public static void displayEvalField(EvalField field) {
-		evalFieldDisplay = new UIEvalFieldDisplay(field);
-		instance.getContentPane().add(evalFieldDisplay);
-	}
-
-	public static void hideEvalField() {
-		instance.getContentPane().remove(evalFieldDisplay);
-		evalFieldDisplay = null;
 	}
 	
 	private void initGUI() {
@@ -133,8 +108,11 @@ public class UIGame extends JFrame {
 			@Override
 			public boolean dispatchKeyEvent(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_Q) {
+					shutdown();
+					/*
 					UIGame.this.dispatchEvent(new WindowEvent(UIGame.this, WindowEvent.WINDOW_CLOSING));
 					e.consume();
+					*/
 					return true;
 				}
 				return false;
@@ -184,14 +162,7 @@ public class UIGame extends JFrame {
 		contentPane.add(uiplayerstatus, BorderLayout.WEST);
 		contentPane.add(uistatus, BorderLayout.SOUTH);
 		if(ai != null && game != null && game.getCurrentPlayer() == p) {
-			this.execService.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					doAI();
-				}
-				
-			});
+			this.execService.submit(new DoAI());
 		}
 		updateStatus();
 		revalidate();
@@ -215,25 +186,9 @@ public class UIGame extends JFrame {
 		uiplayerstatus.setGame(game);
 		uisettings.setGame(game);
 		updateStatus();
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				if(game != null) {
-					uifield.setNewGameAnim(game);
-				}
-			}
-			
-		});
+		SwingUtilities.invokeLater(new GameAnimation());
 		if(game.getPlayerStatus(game.getCurrentPlayer()).isAIPlayer()) {
-			execService.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					doAI();
-				}
-				
-			});
+			execService.submit(new DoAI());
 		}
 		else {
 			blockMoves = false;
@@ -244,39 +199,14 @@ public class UIGame extends JFrame {
 		if (blockMoves) {
 			return;
 		}
-		execService.submit(new Runnable() {
-
-			@Override
-			public void run() {
-				
-
-				if (game.getWinner() != Player.NONE) {
-					startNewGame();
-					return;
-				}
-				
-				game.selectMove(x, y);
-				updateStatus();
-
-				doAI();
-			}
-		});
+		execService.submit(new WinCheck(x, y));
 	}
 
 	private void updateStatus() {
 		SwingUtilities.invokeLater(uistatus);
 		SwingUtilities.invokeLater(uiplayerstatus);
 		SwingUtilities.invokeLater(uisettings);
-		SwingUtilities.invokeLater(new Runnable() {
-
-			@Override
-			public void run() {
-				if(game != null && game.getWinner() != Player.NONE) {
-					uifield.setWonAnim(game.getWinner());
-				}
-			}
-			
-		});
+		SwingUtilities.invokeLater(new SetWonAnimation());
 	}
 
 	private void doAI() {
@@ -295,5 +225,62 @@ public class UIGame extends JFrame {
 			updateStatus();
 		}
 		blockMoves = false;
+	}
+	
+	public void shutdown() {
+		if (execService != null) {
+			execService.shutdownNow();
+		}
+		uifield.shutdown();
+		this.dispose();
+		JABCInteractionController.shutdownChainreaction();
+	}
+	
+	private class WinCheck implements Runnable {
+		final int x;
+		final int y;
+		
+		public WinCheck(int x, int y) {
+			this.x = x;
+			this.y = y;
+		}
+
+		@Override
+		public void run() {
+			if (game.getWinner() != Player.NONE) {
+				startNewGame();
+				return;
+			}
+			game.selectMove(x, y);
+			updateStatus();
+
+			doAI();
+		}
+	}
+	
+	private class SetWonAnimation implements Runnable {
+		@Override
+		public void run() {
+			if(game != null && game.getWinner() != Player.NONE) {
+				uifield.setWonAnim(game.getWinner());
+			}
+		}
+	}
+	
+	private class GameAnimation implements Runnable {
+
+		@Override
+		public void run() {
+			if(game != null) {
+				uifield.setNewGameAnim(game);
+			}
+		}
+	}
+	
+	private class DoAI implements Runnable {
+		@Override
+		public void run() {
+			doAI();
+		}
 	}
 }

@@ -78,6 +78,12 @@ public class UIField extends JPanel implements Runnable, FieldListener, MoveList
 		winImgs.put(Player.SECOND, createWinImage(retroFont, Player.SECOND));
 	}
 
+	public void shutdown() {
+		if(fieldListener != null) {
+			fieldListener.shutDown();
+		}
+	}
+	
 	private BufferedImage createWinImage(final RetroFont retroFont, final Player player) {
 		return createTextImgWithSubtitle(retroFont, 
 				UIPlayer.getPlayer(player).getForeground(), 

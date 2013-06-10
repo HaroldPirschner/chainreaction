@@ -1,15 +1,24 @@
 package de.freewarepoint.cr.ai;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.swing.JFrame;
 
 import de.freewarepoint.cr.CellCoordinateTuple;
 import de.freewarepoint.cr.EvalField;
 import de.freewarepoint.cr.Field;
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
-import de.freewarepoint.cr.swing.UIGame;
+import de.freewarepoint.cr.swing.UIEvalFieldDisplay;
 
 /**
  * @author Dennis Kuehn
@@ -44,13 +53,15 @@ public class JABCAI implements AI {
 
 /// Kann ab hier auch in Game verlegt werden
 		
-		UIGame.displayEvalField(evaluationResult);
+		showEvalField();
 
 		// let the jABC choose the best cell and write its coordinates into this.cellXCoord and this.cellYCoord
+		// TODO: einbauen, dass per settings entschieden wird, wer das auswählen einer zelle bestimmt
 		//sleep();
 
 		setBestCell();
-		UIGame.hideEvalField();
+		
+		// evalFiel verstecken TODO
 		
 		// the jABC waked the AI and has
 		game.selectMove(cellXCoord, cellYCoord);
@@ -58,19 +69,91 @@ public class JABCAI implements AI {
 		ThreadLockManager.getLock().unlock();
 	}
 	
+	private void showEvalField() {
+		final Lock lock = new ReentrantLock();
+		final Condition waitForDisposal = lock.newCondition();
+		final JFrame evaluation = new JFrame("Bewertung der einzelnen Zellen");
+		
+		evaluation.getContentPane().add(new UIEvalFieldDisplay(evaluationResult));
+		addListeners(evaluation, lock, waitForDisposal);
+		evaluation.setBounds(100, 100, 800, 600);
+		evaluation.pack();
+		evaluation.setAlwaysOnTop(true);
+		evaluation.setVisible(true);
+		
+		lock.lock();
+		try {
+			waitForDisposal.await();
+		}
+		catch (InterruptedException e) {
+		}
+		finally {
+			lock.unlock();
+		}
+	}
+
+	private void addListeners(final JFrame evaluation, final Lock lock, final Condition waitForDisposal) {
+		evaluation.addWindowListener(new WindowListener() {
+			public void windowOpened(WindowEvent e) {}
+			public void windowIconified(WindowEvent e) {}
+			public void windowDeiconified(WindowEvent e) {}
+			public void windowDeactivated(WindowEvent e) {}
+			public void windowActivated(WindowEvent e) {}
+			public void windowClosed(WindowEvent e) {}
+			
+			public void windowClosing(WindowEvent e) {
+				System.out.println("windowClosing");
+				lock.lock();
+				try {
+					waitForDisposal.signalAll();
+				}
+				finally {
+					lock.unlock();
+				}
+			}
+		});
+		
+		evaluation.addKeyListener(new KeyListener() {
+			public void keyTyped(KeyEvent e) {}
+			public void keyReleased(KeyEvent e) {}
+			
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER) {
+					lock.lock();
+					try {
+						waitForDisposal.signalAll();
+					}
+					finally {
+						lock.unlock();
+					}
+					System.out.println("key");
+					evaluation.dispose();
+				}
+			}
+		});
+	}
+
 	private void setBestCell() {
 		List<CellCoordinateTuple> bestCells = new LinkedList<>();
 		for (int x = 0; x < evaluationResult.getWidth(); x++) {
 			for (int y = 0; y < evaluationResult.getHeight(); y++) {
-				CellCoordinateTuple firstCell = bestCells.get(0);
 				CellCoordinateTuple thisCell = new CellCoordinateTuple(x, y);
-				if (firstCell == null) {
-					bestCells.add(new CellCoordinateTuple(x, y));
-				} else if (evaluationResult.getValueAt(firstCell) == (evaluationResult.getValueAt(thisCell))) {
+				
+				if (bestCells.size() == 0) {
+					// there is no other cell so this is the best so far
 					bestCells.add(thisCell);
-				} else if (evaluationResult.getValueAt(firstCell) < (evaluationResult.getValueAt(thisCell))) {
-					bestCells = new LinkedList<>();
-					bestCells.add(thisCell);
+				} else {
+					CellCoordinateTuple firstCell = bestCells.get(0);
+
+					if (evaluationResult.getValueAt(firstCell) == evaluationResult.getValueAt(thisCell)) {
+						// found another cell with as good rating
+						bestCells.add(thisCell);
+					}
+					else if (evaluationResult.getValueAt(firstCell) < evaluationResult.getValueAt(thisCell)) {
+						// found a better cell, forget every other cells
+						bestCells = new LinkedList<>();
+						bestCells.add(thisCell);
+					}
 				}
 			}
 		}
