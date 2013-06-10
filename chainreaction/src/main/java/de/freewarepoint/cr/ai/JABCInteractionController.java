@@ -15,7 +15,7 @@ public class JABCInteractionController {
 	Runnable chainreaction;
 	static JABCAI currentAI;
 	boolean hasTwoAIs = false;
-	private static ExecutorService executer = Executors.newCachedThreadPool();
+	private static ExecutorService executor = Executors.newCachedThreadPool();
 	public static Thread me;
 	
 	public JABCInteractionController() {
@@ -23,8 +23,9 @@ public class JABCInteractionController {
 
 	public static void shutdownChainreaction() {
 		System.out.println("Shutting down Chainreaction!");
+		executor.shutdownNow();
+		executor = Executors.newCachedThreadPool();
 		me.interrupt();
-		executer.shutdownNow();
 	}
 
 	public void startGame() {
@@ -32,7 +33,7 @@ public class JABCInteractionController {
 			throw new IllegalStateException("The game has already been started!");
 		}
 		chainreaction = new GameRunner();
-		executer.execute(chainreaction);
+		executor.execute(chainreaction);
 		
 		me = Thread.currentThread();
 

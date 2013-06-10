@@ -11,8 +11,7 @@ import de.freewarepoint.cr.EvalField;
 import de.freewarepoint.retrofont.RetroFont;
 
 /**
- *
- * @author jonny
+ * @author Dennis Kuehn
  */
 public class UIEvalFieldDisplay extends JPanel {
 	

@@ -48,25 +48,28 @@ public class JABCAI implements AI {
 		playerAI = game.getCurrentPlayer();
 		playerOpposing = playerAI == Player.SECOND ? Player.FIRST : Player.SECOND;
 
-		// let the jABC calculate the cell values and write them into this.evaluationResult
-		sleep();
-
-/// Kann ab hier auch in Game verlegt werden
-		
-		showEvalField();
-
-		// let the jABC choose the best cell and write its coordinates into this.cellXCoord and this.cellYCoord
-		// TODO: einbauen, dass per settings entschieden wird, wer das auswählen einer zelle bestimmt
-		//sleep();
-
-		setBestCell();
-		
-		// evalFiel verstecken TODO
-		
-		// the jABC waked the AI and has
-		game.selectMove(cellXCoord, cellYCoord);
-		
-		ThreadLockManager.getLock().unlock();
+		try {
+			// let the jABC calculate the cell values and write them into this.evaluationResult
+			sleep();
+	
+	/// Kann ab hier auch in Game verlegt werden
+			System.out.println(playerAI + ", "+ Thread.currentThread().getName());
+			showEvalField();
+	
+			// let the jABC choose the best cell and write its coordinates into this.cellXCoord and this.cellYCoord
+			// TODO: einbauen, dass per settings entschieden wird, wer das auswählen einer zelle bestimmt
+			//sleep();
+	
+			setBestCell();
+			
+			// evalFiel verstecken TODO
+			
+			// the jABC waked the AI and has
+			game.selectMove(cellXCoord, cellYCoord);
+		}
+		finally {
+			ThreadLockManager.getLock().unlock();
+		}
 	}
 	
 	private void showEvalField() {
@@ -86,6 +89,7 @@ public class JABCAI implements AI {
 			waitForDisposal.await();
 		}
 		catch (InterruptedException e) {
+			throw new IllegalStateException();
 		}
 		finally {
 			lock.unlock();
@@ -171,7 +175,7 @@ public class JABCAI implements AI {
 			ThreadLockManager.getChainreactionRunCondition().await();
 		}
 		catch (InterruptedException e) {
-			e.printStackTrace();
+			throw new IllegalStateException();
 		}
 	}
 
