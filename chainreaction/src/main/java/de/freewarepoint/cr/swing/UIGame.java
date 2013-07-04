@@ -63,17 +63,17 @@ public class UIGame extends JFrame {
         	
 		final GraphicsDevice screenDevice = 
 				GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-		if (screenDevice.isFullScreenSupported()) {
-			this.setResizable(false);
-			this.setAlwaysOnTop(true);
-			this.setVisible(true);
-			screenDevice.setFullScreenWindow(this);
-			this.validate();
-		}
-		else {
+//		if (screenDevice.isFullScreenSupported()) {
+//			this.setResizable(false);
+//			this.setAlwaysOnTop(true);
+//			this.setVisible(true);
+//			screenDevice.setFullScreenWindow(this);
+//			this.validate();
+//		}
+//		else {
 			this.setVisible(true);
 			this.setExtendedState(Frame.MAXIMIZED_BOTH);
-		}
+//		}
 	}
 	
 	private void initGUI() {
