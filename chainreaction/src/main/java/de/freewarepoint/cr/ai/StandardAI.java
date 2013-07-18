@@ -18,7 +18,7 @@ public class StandardAI implements AI {
 
 	private int[] think(Field f, Player playerAI, Player playerOpposing) {
 		Random r = new Random();
-		int opposingAtoms = util.countOwnedAtoms(f, playerOpposing);
+		int opposingAtoms = UtilMethods.countOwnedAtoms(f, playerOpposing);
 		int score = Integer.MIN_VALUE;
 		int[] coords = new int[2];
 		for(int x = 0; x < f.getWidth(); ++x) {
@@ -37,16 +37,16 @@ public class StandardAI implements AI {
 	private int calculateCellValue(Field f, int x, int y, Player playerAI, Player playerOpposing, int opposingAtoms) {
 		Player owner = f.getOwnerOfCellAtPosition(x, y);
 		if(owner == Player.NONE || owner == playerAI) {
-			Field fieldAI = util.getCopyOfField(f);
-			util.placeAtom(fieldAI, x, y, playerAI);
-			util.reactField(fieldAI);
-			int tmp = util.countPlayerCells(fieldAI, playerAI);
-			tmp += util.countOwnedAtoms(fieldAI, playerAI);
-			tmp += opposingAtoms - util.countOwnedAtoms(fieldAI, playerOpposing);
-			tmp += util.isCornerCell(fieldAI, x, y) ? 1 : 0;
-			tmp += util.countCriticalFieldsForPlayer(fieldAI, playerAI) * 2;
-			tmp -= util.computeDangerForCell(fieldAI, x, y, playerAI) * 4;
-			tmp -= util.countEndangeredFields(fieldAI, playerAI);
+			Field fieldAI = UtilMethods.getCopyOfField(f);
+			UtilMethods.placeAtom(fieldAI, x, y, playerAI);
+			UtilMethods.reactField(fieldAI);
+			int tmp = UtilMethods.countPlayerCells(fieldAI, playerAI) + 1000; //increase by 1000 to prevent negative values
+			tmp += UtilMethods.countOwnedAtoms(fieldAI, playerAI);
+			tmp += opposingAtoms - UtilMethods.countOwnedAtoms(fieldAI, playerOpposing);
+			tmp += UtilMethods.isCornerCell(fieldAI, x, y) ? 1 : 0;
+			tmp += UtilMethods.countCriticalFieldsForPlayer(fieldAI, playerAI) * 2;
+			tmp -= UtilMethods.computeDangerForCell(fieldAI, x, y, playerAI) * 4;
+			tmp -= UtilMethods.countEndangeredFields(fieldAI, playerAI);
 			return tmp;
 		}
 		return 0;
