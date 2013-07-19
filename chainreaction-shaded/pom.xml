@@ -1,0 +1,86 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>de.freewarepoint</groupId>
+	<artifactId>chainreaction-shaded</artifactId>
+	<version>1.0</version>
+    	<packaging>jar</packaging>
+
+	<name>chainreaction-shaded</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<parent>
+		<groupId>de.ls5</groupId>
+		<artifactId>ls5-parent</artifactId>
+		<version>17</version>
+	</parent>
+
+	<build>
+		<plugins>
+			<!--plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>de.ls5.ocs.jabc.Main</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>shade-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<shadedArtifactAttached>true</shadedArtifactAttached>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>de.freewarepoint</groupId>
+			<artifactId>chainreaction</artifactId>
+			<version>5.4</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>de.jabc</groupId>
+			<artifactId>cr-strategies</artifactId>
+			<version>4.12</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>de.jabc</groupId>
+			<artifactId>jabc4-basic</artifactId>
+			<version>5.4</version>
+		</dependency>
+	</dependencies>
+		
+	<repositories>
+		<repository>
+			<id>vulturius-webdav</id>
+			<name>jABC Repository</name>
+			<url>https://ls5svn.cs.tu-dortmund.de/maven</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+</project>
