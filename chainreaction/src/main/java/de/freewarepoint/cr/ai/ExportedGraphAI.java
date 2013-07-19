@@ -18,7 +18,7 @@ import de.freewarepoint.cr.UtilMethods;
  * @author Hauke Cziollek
  * @author Dennis Kuehn
  */
-public class ExportedGraphAI implements AI {
+public abstract class ExportedGraphAI implements AI {
 
 	private Game game;
 
@@ -29,36 +29,19 @@ public class ExportedGraphAI implements AI {
 	private Field field;
 	private Field fieldcopy;
 	
-	int bestXCoord;
-	int bestYCoord;
+	private int bestXCoord;
+	private int bestYCoord;
 
-	protected berechneZellenbewertung implementation;
-	
-	public interface berechneZellenbewertung {
-
-		public String execute(
-				final de.freewarepoint.cr.Field Spielfeld, 
-				final java.lang.Integer xKoordinate,
-				final java.lang.Integer yKoordinate, 
-				final de.freewarepoint.cr.Player Spieler);
-
-		public ErfolgreichReturn getErfolgreichReturn();
-
-		public interface ErfolgreichReturn {
-			public java.lang.Integer getZellenbewertung();
-		}
-	}
 	
 	
-	
-	public void setGraph(berechneZellenbewertung implementation) {
-		this.implementation = implementation;
-	}
+	protected abstract String execute(Field fieldcopy, int x, int y, Player player);
+
+	protected abstract Integer getResult();
 	
 	@Override
 	public void doMove() {
-		field = game.getField();
 		player = game.getCurrentPlayer();
+		field = game.getField();
 		fieldcopy = UtilMethods.getCopyOfField(field);
 		int width = field.getWidth();
 		int height = field.getHeight();
@@ -69,11 +52,12 @@ public class ExportedGraphAI implements AI {
 			int y = i/width;
 			if (UtilMethods.isPlacementPossible(fieldcopy, x, y, player)) {
 				// let AI graph decide how valuable placement would be
-				String result = implementation.execute(fieldcopy, x, y, player);
+				String result = execute(fieldcopy, x, y, player);
 				Integer cellValue = null;
 				
 				if (result.equals("erfolgreich")) {
-					cellValue = implementation.getErfolgreichReturn().getZellenbewertung();
+					// took the branch erfolgreich, so access the calculated cell value
+					cellValue = getResult();
 				}
 				
 				if (cellValue == null || cellValue < 0) {
@@ -93,6 +77,10 @@ public class ExportedGraphAI implements AI {
 		game.selectMove(bestXCoord, bestYCoord);
 	}
 
+	/**
+	 * Iterates over all cells and picks the cell with maximal assigned cell value. If more than one such cell is found,
+	 * randomly takes one of all found maximum cells.
+	 */
 	private void chooseBestCell() {
 		List<CellCoordinateTuple> bestCells = new LinkedList<>();
 		for (int x = 0; x < evaluationResult.getWidth(); x++) {
