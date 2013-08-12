@@ -1,3 +1,10 @@
 chainreaction/target/
 exampleAI/target/
 chainreaction-shaded/target/
+exampleAI/.settings/
+exampleAI/.project
+exampleAI/.classpath
+chainreaction/.settings/
+chainreaction/.classpath
+chainreaction/.project
+
