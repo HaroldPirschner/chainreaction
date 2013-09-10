@@ -1,45 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<modelVersion>4.0.0</modelVersion>
 
 	<groupId>de.jabc</groupId>
 	<artifactId>jabc-chainreaction</artifactId>
 	<version>1.0</version>
-    <packaging>jar</packaging>
+	<packaging>jar</packaging>
 
 	<name>chainreaction</name>
 	<url>http://maven.apache.org</url>
 
+	<!--parent>
+		<groupId>de.ls5</groupId>
+		<artifactId>ls5-parent</artifactId>
+		<version>17</version>
+	</parent-->
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>de.freewarepoint.cr.swing.UIGame</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.3.2</version>
-					<configuration>
-						<source>1.7</source>
-						<target>1.7</target>
-						<encoding>UTF-8</encoding>
-					</configuration>
-				</plugin>
-		</plugins>
-	</build>
 
 	<dependencies>
 		<dependency>
@@ -49,4 +28,43 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+                		<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>de.freewarepoint.cr.swing.UIGame</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!--repositories>
+		<repository>
+			<id>vulturius-webdav</id>
+			<name>jABC Repository</name>
+			<url>http://vulturius.cs.tu-dortmund.de/maven</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories-->
 </project>

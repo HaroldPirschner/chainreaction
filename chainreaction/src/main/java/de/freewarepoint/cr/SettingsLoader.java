@@ -122,7 +122,7 @@ public class SettingsLoader {
 
 		URL[] urlArray = urls.toArray(new URL[urls.size()]);
 		URLClassLoader loader = new URLClassLoader(urlArray, SettingsLoader.class.getClassLoader());
-
+		Thread.currentThread().setContextClassLoader(loader);
 		List<AI> ais = new ArrayList<>(urls.size());
 
 		ServiceLoader<AI> serviceLoader = ServiceLoader.load(AI.class, loader);
