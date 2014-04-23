@@ -1,5 +1,6 @@
 package de.freewarepoint.cr.ai;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +11,7 @@ import de.freewarepoint.cr.Field;
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
 import de.freewarepoint.cr.UtilMethods;
+import org.apache.commons.lang3.time.StopWatch;
 
 /**
  * An AI that is used in the process of exporting a jABC KI Graph into a standalone AI jar. This AI is used to interact
@@ -20,35 +22,39 @@ import de.freewarepoint.cr.UtilMethods;
  */
 public abstract class ExportedGraphAI implements AI {
 
+    private final int INITIAL_LENGTH = 50;
+    private int bestXCoord;
+    private int bestYCoord;
+
+    /**
+     * Holds the amount of nanoseconds that passed during the calculation of every move that was made by the AI.
+     */
+    private ArrayList<Long> timesInNano = new ArrayList<>(INITIAL_LENGTH);
+
+    private StopWatch stopwatch;
+
 	private Game game;
 
-	private EvalField evaluationResult;
-
-	private Player player;
-	
-	private Field field;
-	private Field fieldcopy;
-	
-	private int bestXCoord;
-	private int bestYCoord;
-
-	
-	
 	protected abstract String execute(Field fieldcopy, int x, int y, Player player);
 
 	protected abstract Integer getResult();
 	
 	@Override
 	public void doMove() {
-		player = game.getCurrentPlayer();
-		field = game.getField();
-		fieldcopy = UtilMethods.getCopyOfField(field);
+		if (game == null) {
+            throw new IllegalStateException("Current game has not been set for AI!");
+        }
+        stopwatch = new StopWatch();
+        stopwatch.start();
+        Player player = game.getCurrentPlayer();
+		Field field = game.getField();
 		int width = field.getWidth();
 		int height = field.getHeight();
-		evaluationResult = new EvalField(width, height);
+		EvalField evaluationResult = new EvalField(width, height);
 		
 		for (int i = 0; i < width*height; i++) {
-			int x = i%width;
+            Field fieldcopy = UtilMethods.getCopyOfField(field);
+            int x = i%width;
 			int y = i/width;
 			if (UtilMethods.isPlacementPossible(fieldcopy, x, y, player)) {
 				// let AI graph decide how valuable placement would be
@@ -61,7 +67,7 @@ public abstract class ExportedGraphAI implements AI {
 				}
 				
 				if (cellValue == null || cellValue < 0) {
-					// in case the Erfolgreich branch has not been taken or a value <0 has been assigned
+					// in case the erfolgreich branch has not been taken or a value <0 has been assigned
 					cellValue = 0;
 				}
 				
@@ -72,8 +78,9 @@ public abstract class ExportedGraphAI implements AI {
 			}
 		}
 		
-		chooseBestCell();
-		
+		chooseBestCell(evaluationResult);
+        stopwatch.stop();
+        timesInNano.add(stopwatch.getNanoTime());
 		game.selectMove(bestXCoord, bestYCoord);
 	}
 
@@ -81,7 +88,7 @@ public abstract class ExportedGraphAI implements AI {
 	 * Iterates over all cells and picks the cell with maximal assigned cell value. If more than one such cell is found,
 	 * randomly takes one of all found maximum cells.
 	 */
-	private void chooseBestCell() {
+	private void chooseBestCell(EvalField evaluationResult) {
 		List<CellCoordinateTuple> bestCells = new LinkedList<>();
 		for (int x = 0; x < evaluationResult.getWidth(); x++) {
 			for (int y = 0; y < evaluationResult.getHeight(); y++) {
@@ -109,6 +116,10 @@ public abstract class ExportedGraphAI implements AI {
 		bestXCoord = bestCells.get(0).x;
 		bestYCoord = bestCells.get(0).y;
 	}
+
+    public List<Long> getMoveTimesNano() {
+        return timesInNano;
+    }
 
 	@Override
 	public void setGame(Game game) {
