@@ -1,11 +1,8 @@
 package de.freewarepoint.cr.ai;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import de.freewarepoint.cr.CellCoordinateTuple;
-import de.freewarepoint.cr.EvalField;
 import de.freewarepoint.cr.Field;
 import de.freewarepoint.cr.Game;
 import de.freewarepoint.cr.Player;
@@ -17,13 +14,13 @@ import de.freewarepoint.cr.UtilMethods;
  * 
  * @author Hauke Cziollek
  * @author Dennis Kuehn
+ * @author Johannes Neubauer
  */
 public abstract class ExportedGraphAI implements AI {
 
-    private int bestXCoord;
-    private int bestYCoord;
-
 	private Game game;
+
+	private Set<CellCoordinateTuple> bestCells;
 
 	protected abstract String execute(Field fieldcopy, int x, int y, Player player);
 
@@ -34,12 +31,13 @@ public abstract class ExportedGraphAI implements AI {
 		if (game == null) {
             throw new IllegalStateException("Current game has not been set for AI!");
         }
-        Player player = game.getCurrentPlayer();
-		Field field = game.getField();
-		int width = field.getWidth();
-		int height = field.getHeight();
-		EvalField evaluationResult = new EvalField(width, height);
-		
+        final Player player = game.getCurrentPlayer();
+		final Field field = game.getField();
+		final int width = field.getWidth();
+		final int height = field.getHeight();
+		int maxEval = -1;
+		bestCells.clear();
+
 		for (int i = 0; i < width*height; i++) {
             Field fieldcopy = UtilMethods.getCopyOfField(field);
             int x = i%width;
@@ -59,53 +57,26 @@ public abstract class ExportedGraphAI implements AI {
 					cellValue = 0;
 				}
 				
-				evaluationResult.setValueAt(x, y, cellValue);
-			} else {
-				// invalid move, forbid placement
-				evaluationResult.setValueAt(x, y, -1);
-			}
-		}
-		
-		chooseBestCell(evaluationResult);
-		game.selectMove(bestXCoord, bestYCoord);
-	}
-
-	/**
-	 * Iterates over all cells and picks the cell with maximal assigned cell value. If more than one such cell is found,
-	 * randomly takes one of all found maximum cells.
-	 */
-	private void chooseBestCell(EvalField evaluationResult) {
-		List<CellCoordinateTuple> bestCells = new LinkedList<>();
-		for (int x = 0; x < evaluationResult.getWidth(); x++) {
-			for (int y = 0; y < evaluationResult.getHeight(); y++) {
-				CellCoordinateTuple thisCell = new CellCoordinateTuple(x, y);
-				
-				if (bestCells.size() == 0) {
-					// there is no other cell so this is the best so far
-					bestCells.add(thisCell);
-				} else {
-					CellCoordinateTuple firstCell = bestCells.get(0);
-
-					if (evaluationResult.getValueAt(firstCell) == evaluationResult.getValueAt(thisCell)) {
-						// found another cell with as good rating
-						bestCells.add(thisCell);
-					}
-					else if (evaluationResult.getValueAt(firstCell) < evaluationResult.getValueAt(thisCell)) {
-						// found a better cell, forget every other cells
-						bestCells = new LinkedList<>();
-						bestCells.add(thisCell);
-					}
+				if (cellValue > maxEval) {
+					bestCells.clear();
+					bestCells.add(new CellCoordinateTuple(x, y));
+					maxEval = cellValue;
+				}
+				else if(cellValue == maxEval) {
+					bestCells.add(new CellCoordinateTuple(x, y));
 				}
 			}
 		}
-		Collections.shuffle(bestCells);
-		bestXCoord = bestCells.get(0).x;
-		bestYCoord = bestCells.get(0).y;
+
+		final CellCoordinateTuple bestCell = bestCells.iterator().next();
+		game.selectMove(bestCell.x, bestCell.y);
 	}
 
 	@Override
 	public void setGame(Game game) {
 		this.game = game;
+		final Field field = game.getField();
+		this.bestCells = new HashSet<CellCoordinateTuple>((int)1.5*(field.getWidth() * field.getHeight()));
 	}
 
 	@Override
