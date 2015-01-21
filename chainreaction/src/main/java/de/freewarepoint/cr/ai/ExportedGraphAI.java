@@ -20,7 +20,11 @@ public abstract class ExportedGraphAI implements AI {
 
 	private Game game;
 
-	private Set<CellCoordinateTuple> bestCells;
+	private int[] bestCells;
+	private int bestCellsCursor;
+	private Random random;
+	private int width;
+	private int height;
 
 	protected abstract String execute(Field fieldcopy, int x, int y, Player player);
 
@@ -33,15 +37,15 @@ public abstract class ExportedGraphAI implements AI {
         }
         final Player player = game.getCurrentPlayer();
 		final Field field = game.getField();
-		final int width = field.getWidth();
-		final int height = field.getHeight();
+
 		int maxEval = -1;
-		bestCells.clear();
+
+		bestCellsCursor = 0;
 
 		for (int i = 0; i < width*height; i++) {
-            Field fieldcopy = UtilMethods.getCopyOfField(field);
-            int x = i%width;
-			int y = i/width;
+            final Field fieldcopy = UtilMethods.getCopyOfField(field);
+            final int x = i%width;
+			final int y = i/width;
 			if (UtilMethods.isPlacementPossible(fieldcopy, x, y, player)) {
 				// let AI graph decide how valuable placement would be
 				String result = execute(fieldcopy, x, y, player);
@@ -58,25 +62,26 @@ public abstract class ExportedGraphAI implements AI {
 				}
 				
 				if (cellValue > maxEval) {
-					bestCells.clear();
-					bestCells.add(new CellCoordinateTuple(x, y));
+					bestCellsCursor = 0;
 					maxEval = cellValue;
 				}
-				else if(cellValue == maxEval) {
-					bestCells.add(new CellCoordinateTuple(x, y));
-				}
+				bestCells[bestCellsCursor++] = i;
 			}
 		}
 
-		final CellCoordinateTuple bestCell = bestCells.iterator().next();
-		game.selectMove(bestCell.x, bestCell.y);
+		final int bestCell = bestCells[random.nextInt(bestCellsCursor)];
+		game.selectMove(bestCell%width, bestCell/width);
 	}
 
 	@Override
 	public void setGame(Game game) {
 		this.game = game;
 		final Field field = game.getField();
-		this.bestCells = new HashSet<CellCoordinateTuple>((int)1.5*(field.getWidth() * field.getHeight()));
+		this.bestCells = new int[field.getWidth() * field.getHeight()];
+		this.bestCellsCursor = 0;
+		this.random = new Random();
+		this.width = field.getWidth();
+		this.height = field.getHeight();
 	}
 
 	@Override
