@@ -4,7 +4,7 @@
 
 	<groupId>de.freewarepoint</groupId>
 	<artifactId>chainreaction-shaded</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
     	<packaging>jar</packaging>
 
 	<name>chainreaction-shaded</name>
@@ -56,19 +56,13 @@
 		<dependency>
 			<groupId>de.jabc</groupId>
 			<artifactId>jabc-chainreaction</artifactId>
-			<version>1.0</version>
+			<version>1.1</version>
 		</dependency>
 	
 		<dependency>
 			<groupId>de.jabc</groupId>
-			<artifactId>cr-strategies</artifactId>
-			<version>4.20</version>
-		</dependency>
-	
-		<dependency>
-			<groupId>de.jabc</groupId>
-			<artifactId>jabc4-basic</artifactId>
-			<version>5.8</version>
+			<artifactId>cr-strategies-java</artifactId>
+			<version>5.2</version>
 		</dependency>
 	</dependencies>
 		
