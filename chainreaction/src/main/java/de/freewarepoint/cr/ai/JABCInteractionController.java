@@ -1,5 +1,6 @@
 package de.freewarepoint.cr.ai;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
@@ -103,7 +104,17 @@ public class JABCInteractionController {
 	
 	private class ExecutionTerminatedException extends RuntimeException {
 		public String toString() {
-			return "Das Spiel wurde beendet.";
+			final String message;
+
+			Locale locale = new Locale(System.getProperty("JavaABC.locale", "en"));
+
+			if (locale.equals(new Locale("de"))) {
+				message = "Das Spiel wurde beendet.";
+			}
+			else {
+				message = "The game has been terminated.";
+			}
+			return message;
 		}
 	}
 }
