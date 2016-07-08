@@ -40,16 +40,16 @@ public class StandardAI implements AI {
 			Field fieldAI = UtilMethods.getCopyOfField(f);
 			UtilMethods.placeAtom(fieldAI, x, y, playerAI);
 			UtilMethods.reactField(fieldAI);
-			int tmp = UtilMethods.countPlayerCells(fieldAI, playerAI) + 1000; //increase by 1000 to prevent negative values
+			int tmp = UtilMethods.countPlayerCells(fieldAI, playerAI);
 			tmp += UtilMethods.countOwnedAtoms(fieldAI, playerAI);
 			tmp += opposingAtoms - UtilMethods.countOwnedAtoms(fieldAI, playerOpposing);
 			tmp += UtilMethods.isCornerCell(fieldAI, x, y) ? 1 : 0;
 			tmp += UtilMethods.countCriticalFieldsForPlayer(fieldAI, playerAI) * 2;
 			tmp -= UtilMethods.computeDangerForCell(fieldAI, x, y, playerAI) * 4;
 			tmp -= UtilMethods.countEndangeredFields(fieldAI, playerAI);
-			return tmp;
+			return (tmp < 0 ? 0 : tmp);
 		}
-		return 0;
+		return -1;
 	}
 
 	public void doMove() {
